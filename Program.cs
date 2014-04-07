@@ -21,6 +21,7 @@ namespace SerialPortEcho
     public string PortName { get; set; }
     private AppAction Action;
     private bool NoEcho = false;
+    private int BaudRate = 9600;
 
     public Program()
     {
@@ -29,8 +30,18 @@ namespace SerialPortEcho
         { "h|help", "shows this help", s => this.Action = AppAction.ShowHelp },
         { "p=|port=", "sets the name of the serialport (COM1, COM2, etc)", s => { this.Action = AppAction.Echo; this.PortName = s; }},
         { "l|listports", "lists the name of all available COM ports", s => this.Action = AppAction.ListPorts },
-        { "n|no-echo", "does not echo the received byte back", s => this.NoEcho = true }
+        { "n|no-echo", "does not echo the received byte back", s => this.NoEcho = true },
+        { "b=|baudrate=", "sets the baudrate of the serialport", s => this.BaudRate = TryParseBaudRate(s) }
       };
+    }
+
+    private int TryParseBaudRate(string text)
+    {
+      int baudRate;
+      if (!Int32.TryParse(text, out baudRate))
+        baudRate = 9600;
+
+      return baudRate;
     }
 
     private void ListPortNames()
@@ -48,13 +59,14 @@ namespace SerialPortEcho
       }
     }
 
-    private void EchoOnPort(string portName)
+    private void EchoOnPort(string portName, int baudRate)
     {
       try
       {
-        Console.WriteLine(string.Format("Opening port: '{0}'...", portName));
+        Console.WriteLine(string.Format("Opening port: '{0}' with baudrate {1}...", portName, baudRate));
         SerialPort serialPort = new SerialPort();
         serialPort.PortName = portName;
+        serialPort.BaudRate = baudRate;
         serialPort.Open();
         Console.WriteLine("Opened port successfully!");
 
@@ -82,7 +94,7 @@ namespace SerialPortEcho
 
       switch (this.Action)
       {
-        case AppAction.Echo: EchoOnPort(this.PortName); break;
+        case AppAction.Echo: EchoOnPort(this.PortName, this.BaudRate); break;
         case AppAction.ListPorts: ListPortNames(); break;
         case AppAction.ShowHelp: this.OptionSet.WriteOptionDescriptions(Console.Out); break;
       }
