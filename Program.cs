@@ -20,6 +20,7 @@ namespace SerialPortEcho
 
     public string PortName { get; set; }
     private AppAction Action;
+    private bool NoEcho = false;
 
     public Program()
     {
@@ -27,7 +28,8 @@ namespace SerialPortEcho
       {
         { "h|help", "shows this help", s => this.Action = AppAction.ShowHelp },
         { "p=|port=", "sets the name of the serialport (COM1, COM2, etc)", s => { this.Action = AppAction.Echo; this.PortName = s; }},
-        { "l|listports", "lists the name of all available COM ports", s => this.Action = AppAction.ListPorts }
+        { "l|listports", "lists the name of all available COM ports", s => this.Action = AppAction.ListPorts },
+        { "n|no-echo", "does not echo the received byte back", s => this.NoEcho = true }
       };
     }
 
@@ -64,7 +66,8 @@ namespace SerialPortEcho
           writeBuffer[0] = (char)readByte;
 
           /* echo the byte back to sender */
-          serialPort.Write(writeBuffer, 0, 1);
+          if (!this.NoEcho)
+            serialPort.Write(writeBuffer, 0, 1);
         }
       }
       catch (Exception ex)
