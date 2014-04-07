@@ -16,7 +16,7 @@ namespace SerialPortEcho
     }
 
     private readonly OptionSet OptionSet;
-    enum AppAction { ShowHelp, ListPorts, Echo };
+    enum AppAction { ShowHelp, ListPorts, Listen };
 
     public string PortName { get; set; }
     private AppAction Action;
@@ -28,7 +28,7 @@ namespace SerialPortEcho
       this.OptionSet = new Mono.Options.OptionSet()
       {
         { "h|help", "shows this help", s => this.Action = AppAction.ShowHelp },
-        { "p=|port=", "sets the name of the serialport (COM1, COM2, etc)", s => { this.Action = AppAction.Echo; this.PortName = s; }},
+        { "p=|port=", "sets the name of the serialport (COM1, COM2, etc)", s => { this.Action = AppAction.Listen; this.PortName = s; }},
         { "l|listports", "lists the name of all available COM ports", s => this.Action = AppAction.ListPorts },
         { "n|no-echo", "does not echo the received byte back", s => this.NoEcho = true },
         { "b=|baudrate=", "sets the baudrate of the serialport", s => this.BaudRate = TryParseBaudRate(s) }
@@ -59,7 +59,7 @@ namespace SerialPortEcho
       }
     }
 
-    private void EchoOnPort(string portName, int baudRate)
+    private void StartListenOnPort(string portName, int baudRate)
     {
       try
       {
@@ -94,7 +94,7 @@ namespace SerialPortEcho
 
       switch (this.Action)
       {
-        case AppAction.Echo: EchoOnPort(this.PortName, this.BaudRate); break;
+        case AppAction.Listen: StartListenOnPort(this.PortName, this.BaudRate); break;
         case AppAction.ListPorts: ListPortNames(); break;
         case AppAction.ShowHelp: this.OptionSet.WriteOptionDescriptions(Console.Out); break;
       }
