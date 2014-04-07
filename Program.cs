@@ -54,7 +54,7 @@ namespace SerialPortEcho
       {
         Console.WriteLine(string.Format("Opening port: '{0}'...", portName));
         SerialPort serialPort = new SerialPort();
-        serialPort.PortName = this.PortName;
+        serialPort.PortName = portName;
         serialPort.Open();
         Console.WriteLine("Opened port successfully!");
 
