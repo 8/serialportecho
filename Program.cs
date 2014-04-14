@@ -8,6 +8,16 @@ using System.IO.Ports;
 
 namespace SerialPortEcho
 {
+  enum AppAction { ShowHelp, ListPorts, Listen };
+
+  class Settings
+  {
+    public string PortName { get; set; }
+    public AppAction Action;
+    public bool NoEcho = false;
+    public int BaudRate = 9600;
+  }
+
   class Program
   {
     static void Main(string[] args)
@@ -15,24 +25,8 @@ namespace SerialPortEcho
       new Program().Run(args);
     }
 
-    private readonly OptionSet OptionSet;
-    enum AppAction { ShowHelp, ListPorts, Listen };
-
-    public string PortName { get; set; }
-    private AppAction Action;
-    private bool NoEcho = false;
-    private int BaudRate = 9600;
-
     public Program()
     {
-      this.OptionSet = new Mono.Options.OptionSet()
-      {
-        { "h|help", "shows this help", s => this.Action = AppAction.ShowHelp },
-        { "p=|port=", "sets the name of the serialport (COM1, COM2, etc)", s => { this.Action = AppAction.Listen; this.PortName = s; }},
-        { "l|listports", "lists the name of all available COM ports", s => this.Action = AppAction.ListPorts },
-        { "n|no-echo", "does not echo the received byte back", s => this.NoEcho = true },
-        { "b=|baudrate=", "sets the baudrate of the serialport", s => this.BaudRate = TryParseBaudRate(s) }
-      };
     }
 
     private int TryParseBaudRate(string text)
@@ -59,7 +53,7 @@ namespace SerialPortEcho
       }
     }
 
-    private void StartListenOnPort(string portName, int baudRate)
+    private void StartListenOnPort(string portName, int baudRate, bool noEcho)
     {
       try
       {
@@ -78,7 +72,7 @@ namespace SerialPortEcho
           writeBuffer[0] = (char)readByte;
 
           /* echo the byte back to sender */
-          if (!this.NoEcho)
+          if (!noEcho)
             serialPort.Write(writeBuffer, 0, 1);
         }
       }
@@ -90,13 +84,24 @@ namespace SerialPortEcho
 
     public void Run(string[] args)
     {
-      this.OptionSet.Parse(args);
+      var settings = new Settings();
 
-      switch (this.Action)
+      var optionSet = new Mono.Options.OptionSet()
       {
-        case AppAction.Listen: StartListenOnPort(this.PortName, this.BaudRate); break;
+        { "h|help", "shows this help", s => settings.Action = AppAction.ShowHelp },
+        { "p=|port=", "sets the name of the serialport (COM1g, COM2, etc)", s => { settings.Action = AppAction.Listen; settings.PortName = s; }},
+        { "l|listports", "lists the name of all available COM ports", s => settings.Action = AppAction.ListPorts },
+        { "n|no-echo", "does not echo the received byte back", s => settings.NoEcho = true },
+        { "b=|baudrate=", "sets the baudrate of the serialport", s => settings.BaudRate = TryParseBaudRate(s) }
+      };
+
+      optionSet.Parse(args);
+
+      switch (settings.Action)
+      {
+        case AppAction.Listen: StartListenOnPort(settings.PortName, settings.BaudRate, settings.NoEcho); break;
         case AppAction.ListPorts: ListPortNames(); break;
-        case AppAction.ShowHelp: this.OptionSet.WriteOptionDescriptions(Console.Out); break;
+        case AppAction.ShowHelp: optionSet.WriteOptionDescriptions(Console.Out); break;
       }
     }
 
