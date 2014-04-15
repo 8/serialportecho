@@ -9,7 +9,7 @@ using System.IO;
 
 namespace SerialPortTest
 {
-  enum AppAction { ShowHelp, ListPorts, Listen, SendAscii, SendFile, SendText };
+  enum AppAction { ShowHelp, ListPorts, Receive, SendAscii, SendFile, SendText };
 
   class Settings
   {
@@ -95,20 +95,33 @@ namespace SerialPortTest
       return serialPort;
     }
 
-    private void EchoLoop(SerialPort serialPort, bool noEcho)
+    private void Receive(SerialPort serialPort, bool noEcho, string file, int count)
     {
       try
       {
-        int readByte; char[] writeBuffer = new char[1];
-        while ((readByte = serialPort.ReadByte()) != -1)
+        using (FileStream fs = file == null ? null : File.Create(file))
         {
-          /* write the received byte to the console */
-          Console.Write((char)readByte);
-          writeBuffer[0] = (char)readByte;
+          int readByte; char[] writeBuffer = new char[1];
 
-          /* echo the byte back to sender */
-          if (!noEcho)
-            serialPort.Write(writeBuffer, 0, 1);
+          /* read count bytes */
+          for (int i = 0; i < count || count == 0; i++)
+          {
+            readByte = serialPort.ReadByte();
+
+            /* write the received byte to the console */
+            Console.Write((char)readByte);
+
+            /* dump the received byte to disk */
+            if (fs != null)
+              fs.WriteByte((byte)readByte);
+
+            /* echo the byte back to sender */
+            if (!noEcho)
+            {
+              writeBuffer[0] = (char)readByte;
+              serialPort.Write(writeBuffer, 0, 1);
+            }
+          }
         }
       }
       catch (Exception ex)
@@ -150,14 +163,16 @@ namespace SerialPortTest
       var optionSet = new Mono.Options.OptionSet()
       {
         { "h|help", "shows this help", s => settings.Action = AppAction.ShowHelp },
-        { "p=|port=", "sets the name of the serialport (COM1g, COM2, etc)", s => { settings.Action = AppAction.Listen; settings.PortName = s; }},
+        { "p|port=", "sets the name of the serialport (COM1g, COM2, etc)", s => { settings.PortName = s; }},
         { "l|listports", "lists the name of all available COM ports", s => settings.Action = AppAction.ListPorts },
         { "n|no-echo", "does not echo the received byte back", s => settings.NoEcho = true },
-        { "b=|baudrate=", "sets the baudrate of the serialport", s => settings.BaudRate = TryParseBaudRate(s) },
-        { "f=|send-file=", "sends the specified file over the serialport", s => { settings.FilePath = s; settings.Action = AppAction.SendFile; } },
-        { "a=|send-ascii=", "sends the specified ascii value over the serialport", s => { settings.Ascii = TryParseAscii(s); settings.Action = AppAction.SendAscii; } },
-        { "c=|count=", "specifies the number of files or ascii characters that are sent over the serialport", s => { settings.Count = TryParseCount(s); } },
-        { "t=|text=", "specifies the text that is to be sent over the serialport", s => { settings.Text = s; settings.Action = AppAction.SendText; } }
+        { "b|baudrate=", "sets the baudrate of the serialport", s => settings.BaudRate = TryParseBaudRate(s) },
+        { "f|send-file=", "sends the specified file over the serialport", s => { settings.FilePath = s; settings.Action = AppAction.SendFile; } },
+        { "a|send-ascii=", "sends the specified ascii value over the serialport", s => { settings.Ascii = TryParseAscii(s); settings.Action = AppAction.SendAscii; } },
+        { "c|count=", "specifies the number of files or ascii characters that are sent over the serialport", s => { settings.Count = TryParseCount(s); } },
+        { "t|text=", "specifies the text that is to be sent over the serialport", s => { settings.Text = s; settings.Action = AppAction.SendText; } },
+        { "r|receive", "listens on the serialport and writes received data to a file", s => { settings.Action = AppAction.Receive; settings.FilePath = s; } },
+        { "d|dump-to-file=", "optional file to dump the received data to", s => settings.FilePath = s }
       };
 
       optionSet.Parse(args);
@@ -179,7 +194,7 @@ namespace SerialPortTest
         case AppAction.ListPorts: ListPortNames(); break;
         case AppAction.ShowHelp: optionSet.WriteOptionDescriptions(Console.Out); break;
 
-        case AppAction.Listen:
+        case AppAction.Receive:
         case AppAction.SendAscii:
         case AppAction.SendFile:
         case AppAction.SendText:
@@ -192,7 +207,7 @@ namespace SerialPortTest
           {
             switch (settings.Action)
             {
-              case AppAction.Listen: EchoLoop(serialPort, settings.NoEcho); break;
+              case AppAction.Receive: Receive(serialPort, settings.NoEcho, settings.FilePath, settings.Count); break;
               case AppAction.SendAscii: SendAscii(serialPort, settings.Ascii, settings.Count); break;
               case AppAction.SendText: SendText(serialPort, settings.Text, settings.Count); break;
               case AppAction.SendFile: SendFile(serialPort, settings.FilePath, settings.Count); break;
