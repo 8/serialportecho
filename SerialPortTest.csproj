@@ -7,8 +7,8 @@
     <ProjectGuid>{019B60EC-7517-4B72-856C-2FB8775E3D98}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SerialPortEcho</RootNamespace>
-    <AssemblyName>SerialPortEcho</AssemblyName>
+    <RootNamespace>SerialPortTest</RootNamespace>
+    <AssemblyName>SerialPortTest</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

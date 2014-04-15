@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerialPortEcho", "SerialPortEcho.csproj", "{019B60EC-7517-4B72-856C-2FB8775E3D98}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerialPortTest", "SerialPortTest.csproj", "{019B60EC-7517-4B72-856C-2FB8775E3D98}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
