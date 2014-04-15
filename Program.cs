@@ -113,7 +113,10 @@ namespace SerialPortTest
 
             /* dump the received byte to disk */
             if (fs != null)
+            {
               fs.WriteByte((byte)readByte);
+              fs.Flush();
+            }
 
             /* echo the byte back to sender */
             if (!noEcho)
