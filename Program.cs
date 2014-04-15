@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
+using System.IO;
 
 namespace SerialPortTest
 {
@@ -127,6 +128,23 @@ namespace SerialPortTest
         serialPort.Write(text);
     }
 
+    private void SendFile(SerialPort serialPort, string file, int count)
+    {
+      /* open the file */
+      try
+      {
+        for (int i = 0; i < count || count == 0; i++)
+          using (var fs = File.OpenRead(file))
+          {
+            byte[] buffer = new byte[8];
+            int read_bytes;
+            while ((read_bytes = fs.Read(buffer, 0, buffer.Length)) > 0)
+              serialPort.Write(buffer, 0, read_bytes);
+          }
+      }
+      catch (Exception ex) { Console.WriteLine("the following error occurred while trying the send the file:\n" + ex.ToString()); }
+    }
+
     private OptionSet ParseArguments(string[] args, Settings settings)
     {
       var optionSet = new Mono.Options.OptionSet()
@@ -136,7 +154,7 @@ namespace SerialPortTest
         { "l|listports", "lists the name of all available COM ports", s => settings.Action = AppAction.ListPorts },
         { "n|no-echo", "does not echo the received byte back", s => settings.NoEcho = true },
         { "b=|baudrate=", "sets the baudrate of the serialport", s => settings.BaudRate = TryParseBaudRate(s) },
-        //{ "f=|send-file=", "sends the specified file over the serialport", s => { settings.FilePath = s; settings.Action = AppAction.SendFile; } },
+        { "f=|send-file=", "sends the specified file over the serialport", s => { settings.FilePath = s; settings.Action = AppAction.SendFile; } },
         { "a=|send-ascii=", "sends the specified ascii value over the serialport", s => { settings.Ascii = TryParseAscii(s); settings.Action = AppAction.SendAscii; } },
         { "c=|count=", "specifies the number of files or ascii characters that are sent over the serialport", s => { settings.Count = TryParseCount(s); } },
         { "t=|text=", "specifies the text that is to be sent over the serialport", s => { settings.Text = s; settings.Action = AppAction.SendText; } }
@@ -177,6 +195,7 @@ namespace SerialPortTest
               case AppAction.Listen: EchoLoop(serialPort, settings.NoEcho); break;
               case AppAction.SendAscii: SendAscii(serialPort, settings.Ascii, settings.Count); break;
               case AppAction.SendText: SendText(serialPort, settings.Text, settings.Count); break;
+              case AppAction.SendFile: SendFile(serialPort, settings.FilePath, settings.Count); break;
             }
           }
           break;
