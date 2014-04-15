@@ -24,12 +24,12 @@ namespace SerialPortTest
 
     public Settings()
     {
-      this.Action   = AppAction.ShowHelp;
-      this.NoEcho   = false;
+      this.Action = AppAction.ShowHelp;
+      this.NoEcho = false;
       this.BaudRate = 9600;
-      this.Ascii    = (char)0x00;
-      this.Text     = string.Empty;
-      this.Count    = 1;
+      this.Ascii = (char)0x00;
+      this.Text = string.Empty;
+      this.Count = 1;
       this.FilePath = null;
     }
   }
