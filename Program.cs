@@ -15,7 +15,7 @@ namespace SerialPortTest
   {
     public string PortName { get; set; }
     public AppAction Action { get; set; }
-    public bool NoEcho { get; set; }
+    public bool Echo { get; set; }
     public int BaudRate { get; set; }
     public char Ascii { get; set; }
     public int Count { get; set; }
@@ -25,7 +25,7 @@ namespace SerialPortTest
     public Settings()
     {
       this.Action = AppAction.ShowHelp;
-      this.NoEcho = false;
+      this.Echo = false;
       this.BaudRate = 9600;
       this.Ascii = (char)0x00;
       this.Text = string.Empty;
@@ -95,7 +95,7 @@ namespace SerialPortTest
       return serialPort;
     }
 
-    private void Receive(SerialPort serialPort, bool noEcho, string file, int count)
+    private void Receive(SerialPort serialPort, bool echo, string file, int count)
     {
       try
       {
@@ -119,7 +119,7 @@ namespace SerialPortTest
             }
 
             /* echo the byte back to sender */
-            if (!noEcho)
+            if (echo)
             {
               writeBuffer[0] = (char)readByte;
               serialPort.Write(writeBuffer, 0, 1);
@@ -168,7 +168,7 @@ namespace SerialPortTest
         { "h|help", "shows this help", s => settings.Action = AppAction.ShowHelp },
         { "p|port=", "sets the name of the serialport (COM1g, COM2, etc)", s => { settings.PortName = s; }},
         { "l|listports", "lists the name of all available COM ports", s => settings.Action = AppAction.ListPorts },
-        { "n|no-echo", "does not echo the received byte back", s => settings.NoEcho = true },
+        { "e|echo", "echoes the received byte back", s => settings.Echo = true },
         { "b|baudrate=", "sets the baudrate of the serialport", s => settings.BaudRate = TryParseBaudRate(s) },
         { "f|send-file=", "sends the specified file over the serialport", s => { settings.FilePath = s; settings.Action = AppAction.SendFile; } },
         { "a|send-ascii=", "sends the specified ascii value over the serialport", s => { settings.Ascii = TryParseAscii(s); settings.Action = AppAction.SendAscii; } },
@@ -210,7 +210,7 @@ namespace SerialPortTest
           {
             switch (settings.Action)
             {
-              case AppAction.Receive: Receive(serialPort, settings.NoEcho, settings.FilePath, settings.Count); break;
+              case AppAction.Receive: Receive(serialPort, settings.Echo, settings.FilePath, settings.Count); break;
               case AppAction.SendAscii: SendAscii(serialPort, settings.Ascii, settings.Count); break;
               case AppAction.SendText: SendText(serialPort, settings.Text, settings.Count); break;
               case AppAction.SendFile: SendFile(serialPort, settings.FilePath, settings.Count); break;
