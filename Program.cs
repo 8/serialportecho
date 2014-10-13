@@ -17,6 +17,9 @@ namespace SerialPortTest
     public AppAction Action { get; set; }
     public bool Echo { get; set; }
     public int BaudRate { get; set; }
+    public Parity Parity { get; set; }
+    public int DataBits { get; set; }
+    public StopBits StopBits { get; set; }
     public char Ascii { get; set; }
     public int Count { get; set; }
     public string FilePath { get; set; }
@@ -53,6 +56,30 @@ namespace SerialPortTest
       return baudRate;
     }
 
+    private Parity TryParseParity(string text)
+    {
+      Parity parity;
+      if (!Enum.TryParse<Parity>(text, ignoreCase: true, result: out parity))
+        parity = Parity.None; /* default to none */
+      return parity;
+    }
+
+    private int TryParseDataBits(string text)
+    {
+      int databits;
+      if (!Int32.TryParse(text, out databits))
+        databits = 8;
+      return databits;
+    }
+
+    private StopBits TryParseStopBits(string text)
+    {
+      int stopbits;
+      if (!Int32.TryParse(text, out stopbits))
+        stopbits = 1;
+      return (StopBits)stopbits;
+    }
+
     private char TryParseAscii(string text)
     {
       int number;
@@ -84,12 +111,15 @@ namespace SerialPortTest
       }
     }
 
-    private SerialPort GetOpenedPort(string portName, int baudRate)
+    private SerialPort GetOpenedPort(string portName, int baudRate, Parity parity, int databits, StopBits stopbits)
     {
-      Console.WriteLine(string.Format("Opening port: '{0}' with baudrate {1}...", portName, baudRate));
+      Console.WriteLine(string.Format("Opening port: '{0}' with baudrate {1} and parity '{2}' and databits {3} and stopbits {4}...", portName, baudRate, parity, databits, stopbits));
       SerialPort serialPort = new SerialPort();
       serialPort.PortName = portName;
       serialPort.BaudRate = baudRate;
+      serialPort.Parity = parity;
+      serialPort.DataBits = databits;
+      serialPort.StopBits = stopbits;
       serialPort.Open();
       Console.WriteLine("Opened port successfully!");
       return serialPort;
@@ -166,13 +196,16 @@ namespace SerialPortTest
       var optionSet = new Mono.Options.OptionSet()
       {
         { "h|help", "shows this help", s => settings.Action = AppAction.ShowHelp },
-        { "p|port=", "sets the name of the serialport (COM1g, COM2, etc)", s => { settings.PortName = s; }},
+        { "p|port=", "sets the name of the serialport (COM1g, COM2, etc)", s => settings.PortName = s },
         { "l|listports", "lists the name of all available COM ports", s => settings.Action = AppAction.ListPorts },
         { "e|echo", "echoes the received byte back", s => settings.Echo = true },
         { "b|baudrate=", "sets the baudrate of the serialport", s => settings.BaudRate = TryParseBaudRate(s) },
+        { "parity=", "sets the parity bit configuration of the serialport", s => settings.Parity = TryParseParity(s) },
+        { "db|databits=", "sets the databits configuration of the serialport", s => settings.DataBits = TryParseDataBits(s) },
+        { "sb|stopbits=", "sets the stopbits configuration of the serialport", s => settings.StopBits = TryParseStopBits(s) },
         { "f|send-file=", "sends the specified file over the serialport", s => { settings.FilePath = s; settings.Action = AppAction.SendFile; } },
         { "a|send-ascii=", "sends the specified ascii value over the serialport", s => { settings.Ascii = TryParseAscii(s); settings.Action = AppAction.SendAscii; } },
-        { "c|count=", "specifies the number of files or ascii characters that are sent over the serialport", s => { settings.Count = TryParseCount(s); } },
+        { "c|count=", "specifies the number of files or ascii characters that are sent over the serialport", s => settings.Count = TryParseCount(s) },
         { "t|text=", "specifies the text that is to be sent over the serialport", s => { settings.Text = s; settings.Action = AppAction.SendText; } },
         { "r|receive", "listens on the serialport and writes received data to a file", s => { settings.Action = AppAction.Receive; settings.FilePath = s; } },
         { "d|dump-to-file=", "optional file to dump the received data to", s => settings.FilePath = s }
@@ -203,7 +236,7 @@ namespace SerialPortTest
         case AppAction.SendText:
 
           SerialPort serialPort = null;
-          try { serialPort = GetOpenedPort(settings.PortName, settings.BaudRate); }
+          try { serialPort = GetOpenedPort(settings.PortName, settings.BaudRate, settings.Parity, settings.DataBits, settings.StopBits); }
           catch (Exception ex) { Console.WriteLine(string.Format("The following error occurred while trying to open SerialPort '{0}':{1}{2}", settings.PortName, Environment.NewLine, ex)); }
 
           if (serialPort != null)
