@@ -196,7 +196,7 @@ namespace SerialPortTest
       var optionSet = new Mono.Options.OptionSet()
       {
         { "h|help", "shows this help", s => settings.Action = AppAction.ShowHelp },
-        { "p|port=", "sets the name of the serialport (COM1g, COM2, etc)", s => settings.PortName = s },
+        { "p|port=", "sets the name of the serialport (COM1, COM2, etc)", s => settings.PortName = s },
         { "l|listports", "lists the name of all available COM ports", s => settings.Action = AppAction.ListPorts },
         { "e|echo", "echoes the received byte back", s => settings.Echo = true },
         { "b|baudrate=", "sets the baudrate of the serialport", s => settings.BaudRate = TryParseBaudRate(s) },
